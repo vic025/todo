@@ -5,3 +5,4 @@ This project aims to create a to-do list. It's genesis is primarily in response 
 ## Functionality
 * Set reminders at specific times (24 hour)
 * Customisation using themes
+* Lightweight 
