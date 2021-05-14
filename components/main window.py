@@ -28,11 +28,11 @@ title_label.place(x=30, y=25)
 new_task_entry = Entry(root, width=11)
 new_task_entry.place(x=35, y=75)
 # Time entry
-new_task_entry = Entry(root, width=5)
-new_task_entry.place(x=156, y=75)
+new_task_entry_1 = Entry(root, width=5)
+new_task_entry_1.place(x=156, y=75)
 # Date entry
-new_task_entry = Entry(root, width=7)
-new_task_entry.place(x=223, y=75)
+new_task_entry_2 = Entry(root, width=7)
+new_task_entry_2.place(x=223, y=75)
 
 # List (1)
 list_tasks = tk.Listbox(width=29, height=16)
