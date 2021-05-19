@@ -234,6 +234,7 @@ class ToDo:
         # Sets position in JSON file to refer to
         self.data["bg_colour"] = background
         self.data["text_colour"] = foreground
+        # Writes to JSON file
         with open("data.json", "w") as file:
             json.dump(self.data, file)
         messagebox.showinfo("Done!", "The theme has been altered")
