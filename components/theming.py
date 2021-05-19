@@ -83,7 +83,8 @@ class ToDo:
 
         # Buttons (1)
         # Button which adds a task
-        self.add_image = ImageTk.PhotoImage(Image.open("images/add.png"))
+        self.add_image = ImageTk.PhotoImage(
+            Image.open("/Users/vic/PycharmProjects/todo/images/add.png"))
         self.add_task_button = CircleButton(self.root, image=self.add_image,
                                             bg='#ffffff', fg='#000000',
                                             borderless=1,
@@ -104,7 +105,7 @@ class ToDo:
         self.delete_all.place(x=130, y=423)
         # Button which opens up the settings page
         self.settings_image = ImageTk.PhotoImage(
-            Image.open("images/settings.png"))
+            Image.open("/Users/vic/PycharmProjects/todo/images/settings.png"))
         self.settings_button = CircleButton(self.root,
                                             image=self.settings_image,
                                             bg='#ffffff', fg='#000000',
