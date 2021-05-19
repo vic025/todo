@@ -9,3 +9,4 @@ This is a python based program. We will be using tkinter to build our GUI.
 * Set reminders at specific times (24 hour)
 * Customisation using themes
 * Lightweight 
+* Designed and optimised for MacOS
