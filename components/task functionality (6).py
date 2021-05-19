@@ -34,9 +34,12 @@ class ToDo:
 
     # Main body (1)
     def home(self):
+        # Reading the JSON file (denoted by "r")
+        with open("data.json", "r") as file:
+            self.data = json.load(file)
+
         # Creates a new frame for the home page
         self.root = tk.Frame(self.root_1, width=370, height=500)
-
         self.root.place(x=0, y=0)
 
         # Title (1)
