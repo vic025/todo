@@ -66,7 +66,6 @@ class ToDo:
         self.new_task_entry.place(x=35, y=75)
         # Time entry
         self.new_task_time_var = tk.StringVar()
-        # Places the current time into the input field
         self.new_task_time = Entry(self.root,
                                    textvariable=self.new_task_time_var,
                                    width=5)

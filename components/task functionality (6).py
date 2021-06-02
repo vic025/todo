@@ -39,7 +39,8 @@ class ToDo:
             self.data = json.load(file)
 
         # Creates a new frame for the home page
-        self.root = tk.Frame(self.root_1, width=370, height=500)
+        self.root = tk.Frame(self.root_1, width=370, height=500,
+                             bg=self.data["bg_colour"])
         self.root.place(x=0, y=0)
 
         # Title (1)
@@ -51,8 +52,9 @@ class ToDo:
         )
         # Title name and colour
         self.title_label = tk.Label(self.root, text="To-do List",
-                                    font=self.title_label_font)
-
+                                    font=self.title_label_font,
+                                    fg=self.data["text_colour"],
+                                    bg=self.data["bg_colour"])
         self.title_label.place(x=30, y=25)
 
         # Inputs (1)
@@ -65,12 +67,23 @@ class ToDo:
         # Time entry
         self.new_task_time_var = tk.StringVar()
         # Places the current time into the input field
+        self.current_time = datetime.datetime.now()
+        # Converts the time using strftime where we are able to denote hours
+        # by %H and minutes by %M
+        self.current_time = self.current_time.strftime(
+            "%H") + ":" + self.current_time.strftime("%M")
+        self.new_task_time_var.set(str(self.current_time))
         self.new_task_time = Entry(self.root,
                                    textvariable=self.new_task_time_var,
                                    width=5)
         self.new_task_time.place(x=156, y=75)
         # Date entry
         self.date_var = tk.StringVar()
+        # Places the current date into the input field
+        self.current_day = datetime.datetime.now()
+        # Identifies "locale’s appropriate date representation" (%x)
+        self.current_day = self.current_day.strftime("%x")
+        self.date_var.set(self.current_day)
         self.data_entry = Entry(self.root, textvariable=self.date_var, width=7)
         self.data_entry.place(x=223, y=75)
 
@@ -86,20 +99,23 @@ class ToDo:
         self.add_task_button = CircleButton(self.root, image=self.add_image,
                                             bg='#ffffff', fg='#000000',
                                             borderless=1,
-                                            width=35)
+                                            width=35, command=self.add_task)
         self.add_task_button.place(x=308, y=71)
 
+        for i in self.data["data"]:
+            self.list_tasks.insert(tk.END, i[0] + " - " + i[1] + " " + i[2])
         # Button which deletes the selected task
         self.delete_selected = Button(self.root, text="Delete", bg='#ffffff',
                                       fg='#000000', borderless=1,
-                                      activebackground=('#C96666', '#C96666')
-                                      )
+                                      activebackground=('#C96666', '#C96666'),
+                                      command=self.delete_selected_func)
         self.delete_selected.place(x=35, y=423)
         # Button which deletes all inputted tasks
         self.delete_all = Button(self.root, text="Delete All", bg='#ffffff',
                                  fg='#000000', borderless=1,
-                                 activebackground=('#C96666', '#C96666')
-                                 )
+                                 activebackground=('#C96666', '#C96666'),
+                                 command=self.delete_all_func)
+
         self.delete_all.place(x=130, y=423)
         # Button which opens up the settings page
         self.settings_image = ImageTk.PhotoImage(
@@ -111,13 +127,97 @@ class ToDo:
                                             command=self.settings)
         self.settings_button.place(x=308, y=418)
 
+        #self.root_1.after(50, self.send_email())
+
         self.root_1.mainloop()
+
+    # Deletes selected task
+    def delete_selected_func(self):
+        self.list_tasks.delete(tk.ANCHOR)
+        for num, i in enumerate(self.data["data"]):
+            if i == [self.new_task_entry_var.get(),
+                     self.new_task_time_var.get(), self.date_var.get(),
+                     "0"] or i == [self.new_task_entry_var.get(),
+                                   self.new_task_time_var.get(),
+                                   self.date_var.get(), "1"]:
+                del self.data["data"][num]
+        # Writing to the JSON file (denoted by the "w") - removing selected
+        # task
+        with open("data.json", "w") as file:
+            json.dump(self.data, file)
+
+    # Deletes all inputted tasks
+    def delete_all_func(self):
+        # Deletes first task - last task that was inputted
+        self.list_tasks.delete("0", "end")
+        # Rewrites JSON / makes data section blank
+        self.data["data"] = []
+        with open("data.json", "w") as file:
+            json.dump(self.data, file)
+
+    # Adds task
+    def add_task(self):
+        if self.data["email"]:
+            if self.new_task_entry_var.get() == "" or \
+                    self.new_task_time_var.get() == "" or \
+                    self.date_var.get() == "":
+                messagebox.showinfo("Invalid Input!",
+                                    "An input appears to be blank")
+                return
+            try:
+                int(self.new_task_time_var.get().replace(":", ""))
+                int(self.date_var.get().replace("/", ""))
+
+                i = ["", self.new_task_time_var.get(),
+                     self.date_var.get()]
+
+                year = "20" + i[2][-2] + i[2][-1]
+                year = int(year)
+                month = i[2][-5] + i[2][-4]
+                month = int(month)
+                day = i[2][0] + i[2][1]
+                day = int(day)
+                hour = i[1][0] + i[1][1]
+                hour = int(hour)
+                minute = i[1][-2] + i[1][-1]
+                minute = int(minute)
+
+                date_old = datetime.datetime(year, day, month, hour, minute,
+                                             00, 798408)
+
+                if datetime.datetime.now() > date_old:
+                    messagebox.showinfo("Invalid Input!",
+                                        "Inputted time and/or date is before "
+                                        "the actual time")
+                    return
+                else:
+                    self.list_tasks.insert(tk.END,
+                                           self.new_task_entry_var.get() +
+                                           " - " +
+                                           self.new_task_time_var.get() + " " +
+                                           self.date_var.get())
+                    # Appending the added task into the JSON
+                    self.data["data"].append([self.new_task_entry_var.get(),
+                                              self.new_task_time_var.get(),
+                                              self.date_var.get(), "1"])
+                    with open("data.json", "w") as file:
+                        json.dump(self.data, file)
+
+            except:
+                messagebox.showinfo("Invalid Input!",
+                                    "Invalid date or time format")
+                return
+
+        else:
+            messagebox.showinfo("Invalid Input!",
+                                "An email has not been inputted")
+
 
     # Settings page (2)
     def settings(self):
         # Creates a new frame for the preferences page
-        self.root = tk.Frame(self.root_1, width=370, height=500)
-
+        self.root = tk.Frame(self.root_1, width=370, height=500,
+                             bg=self.data["bg_colour"])
         self.root.place(x=0, y=0)
 
         # Title (2)
@@ -129,8 +229,9 @@ class ToDo:
         )
         # Title name and colour - Preferences
         self.title_label = tk.Label(self.root, text="Preferences",
-                                    font=self.title_label_font)
-
+                                    font=self.title_label_font,
+                                    fg=self.data["text_colour"],
+                                    bg=self.data["bg_colour"])
         self.title_label.place(x=30, y=35)
 
         # Buttons (2)
@@ -144,8 +245,9 @@ class ToDo:
         # Themes
         # Title name and colour - Themes
         self.pref_label = tk.Label(self.root, text="Themes",
-                                   font=self.title_label_font)
-
+                                   font=self.title_label_font,
+                                   fg=self.data["text_colour"],
+                                   bg=self.data["bg_colour"])
         self.pref_label.place(x=30, y=80)
 
         # Button which alters the theme and text colour
@@ -153,58 +255,67 @@ class ToDo:
         # White background, black text
         self.colour_white = Button(self.root, font="15",
                                    bg='#F4F3F1', fg='#F4F3F1', borderless=1,
-                                   width=25, highlightbackground='#2E2F30')
-
+                                   width=25, highlightbackground='#2E2F30',
+                                   command=lambda: self.change_bg('#F4F3F1',
+                                                                  "black"))
         self.colour_white.place(x=35, y=125)
         # Black background, white text
         self.colour_black = Button(self.root, font="15",
                                    bg='#2E2F30', fg='#2E2F30', borderless=1,
-                                   width=25)
-
+                                   width=25,
+                                   command=lambda: self.change_bg('#2E2F30',
+                                                                  "white"))
         self.colour_black.place(x=65, y=125)
         # Red background, black text
         self.colour_red = Button(self.root, font="15",
                                  bg='#C96666',
                                  fg='#C96666', borderless=1, width=25,
-                                 highlightbackground='#C96666')
-
+                                 highlightbackground='#C96666',
+                                 command=lambda: self.change_bg('#C96666',
+                                                                "black"))
         self.colour_red.place(x=95, y=125)
         # Green background, black text
         self.colour_green = Button(self.root, font="15",
                                    bg='#B0D8B5', fg='#B0D8B5',
                                    borderless=1,
-                                   width=25)
-
+                                   width=25,
+                                   command=lambda: self.change_bg(
+                                       '#B0D8B5', "black"))
         self.colour_green.place(x=125, y=125)
         # Blue background, black text
         self.colour_blue = Button(self.root, font="15",
                                   bg='#90ADC6', fg='#90ADC6',
                                   borderless=1,
-                                  width=25)
-
+                                  width=25,
+                                  command=lambda: self.change_bg(
+                                      '#90ADC6', "black"))
         self.colour_blue.place(x=155, y=125)
 
         # Email
         # Title name and colour - Email
         self.email_label = tk.Label(self.root, text="Email",
-                                    font=self.title_label_font)
+                                    font=self.title_label_font,
+                                    fg=self.data["text_colour"],
+                                    bg=self.data["bg_colour"])
         self.email_label.place(x=30, y=190)
         # Email entry
         self.email_entry_var = tk.StringVar()
+        self.email_entry_var.set(self.data["email"])
         self.email_entry = Entry(self.root, textvariable=self.email_entry_var,
                                  width=32)
         self.email_entry.place(x=35, y=235)
         # Button which changes the set email
         self.change = Button(self.root, text="Change", bg='#ffffff',
-                             fg='#000000', borderless=1
-                             )
+                             fg='#000000', borderless=1,
+                             command=self.change_func)
         self.change.place(x=32, y=285)
 
         # Help
         # Title name and colour - Help
         self.instructions_label = tk.Label(self.root, text="Help",
-                                           font=self.title_label_font)
-
+                                           font=self.title_label_font,
+                                           fg=self.data["text_colour"],
+                                           bg=self.data["bg_colour"])
         self.instructions_label.place(x=30, y=350)
         # Button which opens the instructions window
         self.instructions = Button(self.root, text="Instructions",
@@ -217,6 +328,84 @@ class ToDo:
                                    command=self.requirements_func)
         self.requirements.place(x=32, y=426)
         self.root.mainloop()
+
+    # Changes the theme
+    def change_bg(self, background, foreground):
+        # Sets position in JSON file to refer to
+        self.data["bg_colour"] = background
+        self.data["text_colour"] = foreground
+        # Writes to JSON file
+        with open("data.json", "w") as file:
+            json.dump(self.data, file)
+        messagebox.showinfo("Done!", "The theme has been altered")
+        self.settings()
+
+    # Changes the email
+    def change_func(self):
+        # If the inputted email is valid
+        if validate_email(self.email_entry_var.get()):
+            # If the amount of tasks in the list is 0 (denoted by len),
+            # proceed to change the email, otherwise, present an error
+            # message
+            if len(self.data["data"]) == 0:
+                self.data["email"] = self.email_entry_var.get()
+                with open("data.json", "w") as file:
+                    json.dump(self.data, file)
+                messagebox.showinfo("Done!",
+                                    "Email changed to " +
+                                    self.email_entry_var.get())
+            else:
+                messagebox.showinfo("Error!",
+                                    "Please to do not alter the email"
+                                    " address when there are active"
+                                    " tasks")
+                return
+        else:
+            messagebox.showinfo("Error!", "The email entered is invalid")
+            self.settings()
+
+    # Email functionality
+    def send_email(self):
+
+        for i in self.data["data"]:
+            if bool(int(i[3])):
+                year = "20" + i[2][-2] + i[2][-1]
+                year = int(year)
+                month = i[2][-5] + i[2][-4]
+                month = int(month)
+                day = i[2][0] + i[2][1]
+                day = int(day)
+                hour = i[1][0] + i[1][1]
+                hour = int(hour)
+                minute = i[1][-2] + i[1][-1]
+                minute = int(minute)
+
+                date_old = datetime.datetime(year, day, month, hour, minute,
+                                             00, 798408)
+
+                try:
+                    if datetime.datetime.now() > date_old:
+                        # SMTP port number: 587
+                        self.smtp_session = smtplib.SMTP('smtp.gmail.com', 587)
+                        self.smtp_session.starttls()
+                        # Mailing address (email and password)
+                        self.smtp_session.login("mailtemp025@gmail.com",
+                                                "Fluffy15010hi")
+                        # Email message sent (f-string)
+                        self.message = f"The task '{i[0]}' is due right now"
+
+                        self.smtp_session.sendmail("mailtemp025@gmail.com",
+                                                   self.data["email"],
+                                                   self.message)
+
+                        self.smtp_session.quit()
+                        i[3] = "0"
+                        with open("data.json", "w") as file:
+                            json.dump(self.data, file)
+                except:
+                    pass
+
+        self.root.after(50, self.send_email)
 
     # Help menu
     # Instructions
