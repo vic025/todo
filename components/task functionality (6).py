@@ -8,6 +8,9 @@ from tkinter import *
 from tkinter.font import Font
 from tkmacosx import Button, CircleButton
 
+# Audio
+from playsound import playsound
+
 # Date and time
 import datetime
 
@@ -17,11 +20,18 @@ from PIL import Image, ImageTk
 # Data storage
 import json
 
+# Notifications
+import os
+
 # Email
 import smtplib
 
 # Email verification
 from validate_email import validate_email
+
+# Title and message for 'email sent' confirmation
+title = "To-do List"
+message = "Success; email has been sent"
 
 
 # Housing of the program
@@ -33,6 +43,8 @@ class ToDo:
         self.root_1.resizable(False, False)  # Disable window resizing
 
     # Main body (1)
+    # Switching between the home page and the settings page will be done so by
+    # creating a frame, then deleting the prior frame
     def home(self):
         # Reading the JSON file (denoted by "r")
         with open("data.json", "r") as file:
@@ -89,37 +101,40 @@ class ToDo:
 
         # List (1)
         # Displays all inputted tasks
-        self.list_tasks = tk.Listbox(self.root, width=29, height=16)
+        self.list_tasks = tk.Listbox(self.root, width=29, height=16,
+                                     selectmode='single')
         self.list_tasks.place(x=35, y=125)
 
         # Buttons (1)
         # Button which adds a task
-        self.add_image = ImageTk.PhotoImage(
-            Image.open("/Users/vic/PycharmProjects/todo/images/add.png"))
+        self.add_image = ImageTk.PhotoImage(Image.open("images/add.png"))
         self.add_task_button = CircleButton(self.root, image=self.add_image,
                                             bg='#ffffff', fg='#000000',
                                             borderless=1,
                                             width=35, command=self.add_task)
         self.add_task_button.place(x=308, y=71)
 
+        # Makes it so the tasks which are stored in data.json show up in the
+        # list of the GUI
         for i in self.data["data"]:
+            # inserts tasks so that task: name - time date
             self.list_tasks.insert(tk.END, i[0] + " - " + i[1] + " " + i[2])
+
         # Button which deletes the selected task
         self.delete_selected = Button(self.root, text="Delete", bg='#ffffff',
                                       fg='#000000', borderless=1,
-                                      activebackground=('#C96666', '#C96666'),
+                                      activebackground=('#CD3F5D', '#CD3F5D'),
                                       command=self.delete_selected_func)
         self.delete_selected.place(x=35, y=423)
         # Button which deletes all inputted tasks
         self.delete_all = Button(self.root, text="Delete All", bg='#ffffff',
                                  fg='#000000', borderless=1,
-                                 activebackground=('#C96666', '#C96666'),
+                                 activebackground=('#CD3F5D', '#CD3F5D'),
                                  command=self.delete_all_func)
-
         self.delete_all.place(x=130, y=423)
         # Button which opens up the settings page
         self.settings_image = ImageTk.PhotoImage(
-            Image.open("/Users/vic/PycharmProjects/todo/images/settings.png"))
+            Image.open("images/settings.png"))
         self.settings_button = CircleButton(self.root,
                                             image=self.settings_image,
                                             bg='#ffffff', fg='#000000',
@@ -127,20 +142,19 @@ class ToDo:
                                             command=self.settings)
         self.settings_button.place(x=308, y=418)
 
-        #self.root_1.after(50, self.send_email())
+        self.root_1.after(50, self.send_email())
 
         self.root_1.mainloop()
 
     # Deletes selected task
     def delete_selected_func(self):
+        playsound("audio/delete.mp3")
+        # Identifies selected task from listbox
+        for i in self.list_tasks.curselection():
+            self.data["data"].pop(i)
+
         self.list_tasks.delete(tk.ANCHOR)
-        for num, i in enumerate(self.data["data"]):
-            if i == [self.new_task_entry_var.get(),
-                     self.new_task_time_var.get(), self.date_var.get(),
-                     "0"] or i == [self.new_task_entry_var.get(),
-                                   self.new_task_time_var.get(),
-                                   self.date_var.get(), "1"]:
-                del self.data["data"][num]
+
         # Writing to the JSON file (denoted by the "w") - removing selected
         # task
         with open("data.json", "w") as file:
@@ -148,6 +162,7 @@ class ToDo:
 
     # Deletes all inputted tasks
     def delete_all_func(self):
+        playsound("audio/delete_all.mp3")
         # Deletes first task - last task that was inputted
         self.list_tasks.delete("0", "end")
         # Rewrites JSON / makes data section blank
@@ -157,20 +172,29 @@ class ToDo:
 
     # Adds task
     def add_task(self):
+        playsound("audio/add.mp3")
+        # If there is an email inputted
         if self.data["email"]:
+            # If the entry task is blank, (\ for syntax purposes)
             if self.new_task_entry_var.get() == "" or \
-                    self.new_task_time_var.get() == "" or \
+                self.new_task_time_var.get() == "" or \
                     self.date_var.get() == "":
                 messagebox.showinfo("Invalid Input!",
                                     "An input appears to be blank")
                 return
             try:
+                # Removes : and / from time and date to make them "simple"
                 int(self.new_task_time_var.get().replace(":", ""))
                 int(self.date_var.get().replace("/", ""))
 
+                # i  = task name, time, date
                 i = ["", self.new_task_time_var.get(),
                      self.date_var.get()]
 
+                # Python lists start at 0
+                # e.g. i[2][-2] will go to the second element of JSON which is
+                # the date, and take the last 2 numbers ([-2] and [-1])
+                # (index)
                 year = "20" + i[2][-2] + i[2][-1]
                 year = int(year)
                 month = i[2][-5] + i[2][-4]
@@ -182,8 +206,7 @@ class ToDo:
                 minute = i[1][-2] + i[1][-1]
                 minute = int(minute)
 
-                date_old = datetime.datetime(year, day, month, hour, minute,
-                                             00, 798408)
+                date_old = datetime.datetime(year, day, month, hour, minute)
 
                 if datetime.datetime.now() > date_old:
                     messagebox.showinfo("Invalid Input!",
@@ -211,7 +234,6 @@ class ToDo:
         else:
             messagebox.showinfo("Invalid Input!",
                                 "An email has not been inputted")
-
 
     # Settings page (2)
     def settings(self):
@@ -261,34 +283,36 @@ class ToDo:
         self.colour_white.place(x=35, y=125)
         # Black background, white text
         self.colour_black = Button(self.root, font="15",
-                                   bg='#2E2F30', fg='#2E2F30', borderless=1,
+                                   bg='#232326', fg='#232326', borderless=1,
                                    width=25,
-                                   command=lambda: self.change_bg('#2E2F30',
+                                   command=lambda: self.change_bg('#232326',
                                                                   "white"))
         self.colour_black.place(x=65, y=125)
         # Red background, black text
         self.colour_red = Button(self.root, font="15",
-                                 bg='#C96666',
-                                 fg='#C96666', borderless=1, width=25,
-                                 highlightbackground='#C96666',
-                                 command=lambda: self.change_bg('#C96666',
+                                 bg='#CD3F5D',
+                                 fg='#CD3F5D', borderless=1, width=25,
+                                 highlightbackground='#CD3F5D',
+                                 command=lambda: self.change_bg('#CD3F5D',
                                                                 "black"))
         self.colour_red.place(x=95, y=125)
         # Green background, black text
         self.colour_green = Button(self.root, font="15",
-                                   bg='#B0D8B5', fg='#B0D8B5',
+                                   bg='#00AD92', fg='#00AD92',
                                    borderless=1,
                                    width=25,
+                                   highlightbackground='#00AD92',
                                    command=lambda: self.change_bg(
-                                       '#B0D8B5', "black"))
+                                       '#00AD92', "black"))
         self.colour_green.place(x=125, y=125)
         # Blue background, black text
         self.colour_blue = Button(self.root, font="15",
-                                  bg='#90ADC6', fg='#90ADC6',
+                                  bg='#728EE3', fg='#728EE3',
                                   borderless=1,
                                   width=25,
+                                  highlightbackground='#728EE3',
                                   command=lambda: self.change_bg(
-                                      '#90ADC6', "black"))
+                                      '#728EE3', "black"))
         self.colour_blue.place(x=155, y=125)
 
         # Email
@@ -342,6 +366,7 @@ class ToDo:
 
     # Changes the email
     def change_func(self):
+        playsound("audio/add.mp3")
         # If the inputted email is valid
         if validate_email(self.email_entry_var.get()):
             # If the amount of tasks in the list is 0 (denoted by len),
@@ -391,7 +416,16 @@ class ToDo:
                         # Mailing address (email and password)
                         self.smtp_session.login("mailtemp025@gmail.com",
                                                 "Fluffy15010hi")
+                        # Confirmation that email has been sent
+                        command = f'''
+                                osascript -e 'display notification "
+                                {message}" with title "{title}"'
+                                '''
+                        os.system(command)
                         # Email message sent (f-string)
+                        # i[0] refers to the message i[1] refers to th time
+                        # i[2] refers to the date, i[3] refers to the
+                        # indicator
                         self.message = f"The task '{i[0]}' is due right now"
 
                         self.smtp_session.sendmail("mailtemp025@gmail.com",
@@ -399,9 +433,12 @@ class ToDo:
                                                    self.message)
 
                         self.smtp_session.quit()
+                        # Set the 1 to 0 in the data.json to indicate an email
+                        # has been sent
                         i[3] = "0"
                         with open("data.json", "w") as file:
                             json.dump(self.data, file)
+                # needed to fix syntax issue with 'with'
                 except:
                     pass
 
