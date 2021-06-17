@@ -29,6 +29,16 @@ import smtplib
 # Email verification
 from validate_email import validate_email
 
+# Math
+import math
+
+# Location detection
+import geocoder
+
+# API
+import requests
+API_KEY = "413ddc96f3900cda7e59f97f89395675"
+
 # Title and message for 'email sent' confirmation
 title = "To-do List"
 message = "Success; email has been sent"
@@ -143,6 +153,15 @@ class ToDo:
                                             borderless=1, width=35,
                                             command=self.settings)
         self.settings_button.place(x=308, y=418)
+        # Button which opens up the widgets page
+        self.widgets_image = ImageTk.PhotoImage(
+            Image.open("/Users/vic/PycharmProjects/todo/images/widgets.png"))
+        self.widgets_button = CircleButton(self.root,
+                                           image=self.widgets_image,
+                                           bg='#ffffff', fg='#000000',
+                                           borderless=1, width=35,
+                                           command=self.widgets)
+        self.widgets_button.place(x=268, y=418)
 
         self.root_1.after(50, self.send_email())
 
@@ -154,7 +173,7 @@ class ToDo:
         # Identifies selected task from listbox
         for i in self.list_tasks.curselection():
             self.data["data"].pop(i)
-
+        # Removes from listbox
         self.list_tasks.delete(tk.ANCHOR)
 
         # Writing to the JSON file (denoted by the "w") - removing selected
@@ -235,7 +254,8 @@ class ToDo:
 
         else:
             messagebox.showinfo("Invalid Input!",
-                                "An email has not been inputted")
+                                "An email has not been inputted. Please do so"
+                                "in the preferences menu")
 
     # Settings page (2)
     def settings(self):
@@ -407,8 +427,7 @@ class ToDo:
                 minute = i[1][-2] + i[1][-1]
                 minute = int(minute)
 
-                date_old = datetime.datetime(year, day, month, hour, minute,
-                                             00, 798408)
+                date_old = datetime.datetime(year, day, month, hour, minute)
 
                 try:
                     if datetime.datetime.now() > date_old:
@@ -456,8 +475,8 @@ class ToDo:
                             "\n \n 2. Once the set time is reached, "
                             "an email will be sent. Click the delete button "
                             "to then remove the task from the list."
-                            "\n \n 3. Clicking the settings button will "
-                            "open up the preferences menu.")
+                            "\n \n 3. Clicking the widgets or settings button "
+                            "will open up their respective menus.")
 
     # Requirements
     def requirements_func(self):
@@ -470,6 +489,166 @@ class ToDo:
                             "\n \n 3. An internet connection is needed for "
                             "email capabilities to function."
                             "\n \n 4. MacOS is the only supported platform")
+
+    # Widgets page (3)
+    def widgets(self):
+        # Creates a new Canvas for the widgets page
+        self.root = tk.Canvas(self.root_1, width=370, height=500,
+                              bg=self.data["bg_colour"], highlightthickness=0)
+        self.root.grid(row=0, column=0)
+
+        # Days
+        self.week = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+        ]
+
+        # Months
+        self.year = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ]
+
+        # Calculation to determine what day corresponds to what date in the
+        # weekly view
+        self.week_days = []
+        self.current_day = datetime.datetime.today()
+        start = self.current_day.weekday()
+        end = 7 - start
+        for i in range(-start, end):
+            self.week_days.append(
+                (self.current_day + datetime.timedelta(days=i)).day)
+
+        # Auto detect location
+        self.city = geocoder.ip("me").city
+
+        # OpenWeather API format
+        # https://openweathermap.org/current
+        self.weatherAPI = "https://api.openweathermap.org/data/2.5/weather?q" \
+                          "=" + \
+                          self.city + "&appid=" + API_KEY
+
+        # Weather report
+        self.weather = requests.get(url=self.weatherAPI).json()
+        self.condition = self.weather["weather"][0]["main"]
+        # Weather icon
+        code = self.weather["weather"][0]["icon"]
+        self.weather_image = "/Users/vic/PycharmProjects/todo/" \
+                             "weather/" + code + "@2x.png"
+        # Weather temperature (-273.15 to convert from kelvin)
+        self.celsius = float(self.weather["main"]["temp"])
+        self.temperature = math.floor(self.celsius - 273.15)
+
+        # Title (3)
+        # Font
+        self.title_label_font = Font(
+            family="SF Pro Rounded",
+            size=20,
+            weight="bold"
+        )
+        # Title name and colour - Widgets
+        self.title_label = tk.Label(self.root, text="Widgets",
+                                    font=self.title_label_font,
+                                    fg=self.data["text_colour"],
+                                    bg=self.data["bg_colour"])
+        self.title_label.place(x=30, y=35)
+
+        # Buttons (3)
+        # Button which returns back to the home page
+        self.back_button = Button(self.root, text="Back", bg='#ffffff',
+                                  fg='#000000', borderless=1,
+                                  command=self.home)
+        self.back_button.place(x=3, y=3)
+
+        # Calendar
+        # Title name and colour - Calendar
+        self.cal_label = tk.Label(self.root, text="Calendar",
+                                  font=self.title_label_font,
+                                  fg=self.data["text_colour"],
+                                  bg=self.data["bg_colour"])
+        self.cal_label.place(x=30, y=80)
+        self.show_week()
+
+        # Weather
+        # Title name and colour - Weather
+        self.weather_label = tk.Label(self.root, text="Weather",
+                                      font=self.title_label_font,
+                                      fg=self.data["text_colour"],
+                                      bg=self.data["bg_colour"])
+        self.weather_label.place(x=30, y=280)
+        self.show_weather()
+
+    # Calendar - weekly view
+    def show_week(self):
+        # Widget box
+        self.root.create_rectangle(
+            35, 120, 333, 255, outline="#D7D7D7", width=4, fill="#F0F0F0")
+
+        # Month
+        m = self.current_day.month - 1
+        self.root.create_text(
+            47, 128, text=self.year[m], font=("SF Pro Rounded", 15, "bold"),
+            anchor="nw")
+
+        box_size = 38
+        border_colour = "#D7D7D7"
+
+        for i in range(7):
+            # Monday to Sunday
+            self.root.create_text(
+                (box_size + box_size * i) + 32, 165, text=self.week[i][0],
+                font=("SF Pro Rounded", 15, "bold"))
+            # Dates
+            self.root.create_text(
+                (box_size + box_size * i) + 32, 200,
+                text=str(self.week_days[i]),
+                font=("SF Pro Rounded", 15, "bold"))
+            # Dates boxes
+            self.root.create_rectangle(
+                (box_size / 2 + box_size * i) + 32, 180,
+                (box_size / 2 + box_size + box_size * i) + 32, 180 + box_size,
+                outline=border_colour, width=4)
+
+        # Highlight the current box
+        self.root.create_rectangle(
+            box_size / 2 + box_size * (self.current_day.weekday()) + 32, 180,
+            box_size / 2 + box_size + box_size * (
+                self.current_day.weekday()) + 32,
+            180 + box_size, outline="#CD3F5D", width=4)
+
+    # Current weather
+    def show_weather(self):
+        # Widget box
+        self.root.create_rectangle(
+            35, 320, 333, 455, outline="#D7D7D7", width=4, fill="#F0F0F0")
+
+        # Weather adjustments
+        self.root.create_text(
+            47, 329, text=self.city, font=("SF Pro Rounded", 15, "bold"),
+            justify="left", anchor="nw")
+        self.root.create_text(
+            47, 352, text=str(self.temperature) + "°",
+            font=("SF Pro Rounded", 15, "bold"), anchor="nw")
+        img = Image.open(self.weather_image)
+        self.weather_image = ImageTk.PhotoImage(image=img)
+        self.root.create_image(185, 383, image=self.weather_image)
+        self.root.create_text(
+            185, 420, text=self.condition, font=("SF Pro Rounded", 15, "bold"))
 
 
 main = ToDo()
