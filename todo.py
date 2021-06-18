@@ -611,6 +611,7 @@ class ToDo:
             self.weather_label.place(x=30, y=280)
             self.show_weather()
         else:
+            # If there is no internet connection, issue a warning
             messagebox.showinfo("Warning",
                                 "Warning"
                                 "\n \nPlease check your internet connection")
