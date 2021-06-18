@@ -35,8 +35,12 @@ import math
 # Location detection
 import geocoder
 
+# Internet detection
+import socket
+
 # API
 import requests
+
 API_KEY = "413ddc96f3900cda7e59f97f89395675"
 
 # Title and message for 'email sent' confirmation
@@ -51,6 +55,11 @@ class ToDo:
         self.root_1.title("To-do List")  # Title of the window
         self.root_1.geometry('370x500+600+75')  # Window size
         self.root_1.resizable(False, False)  # Disable window resizing
+
+        # Dock icon
+        dock_icon = tk.Image("photo", file="images/icons.icns")
+        self.root_1.iconphoto(True, dock_icon)
+        self.root_1.tk.call('wm', 'iconphoto', self.root_1._w, dock_icon)
 
     # Main body (1)
     # Switching between the home page and the settings page will be done so by
@@ -488,107 +497,123 @@ class ToDo:
                             "email capabilities to function."
                             "\n \n 4. MacOS is the only supported platform")
 
+    # Internet detection
+    def internet_on(self):
+        try:
+            socket.create_connection(('Google.com', 80))
+            return True
+        except OSError:
+            return False
+
     # Widgets page (3)
     def widgets(self):
-        # Creates a new Canvas for the widgets page
-        self.root = tk.Canvas(self.root_1, width=370, height=500,
-                              bg=self.data["bg_colour"], highlightthickness=0)
-        self.root.grid(row=0, column=0)
+        # Check if there is an internet connection
+        if self.internet_on():
+            # Creates a new Canvas for the widgets page
+            self.root = tk.Canvas(self.root_1, width=370, height=500,
+                                  bg=self.data["bg_colour"],
+                                  highlightthickness=0)
+            self.root.grid(row=0, column=0)
 
-        # Days
-        self.week = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday"
-        ]
+            # Days
+            self.week = [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ]
 
-        # Months
-        self.year = [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December"
-        ]
+            # Months
+            self.year = [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December"
+            ]
 
-        # Calculation to determine what day corresponds to what date in the
-        # weekly view
-        self.week_days = []
-        self.current_day = datetime.datetime.today()
-        start = self.current_day.weekday()
-        end = 7 - start
-        for i in range(-start, end):
-            self.week_days.append(
-                (self.current_day + datetime.timedelta(days=i)).day)
+            # Calculation to determine what day corresponds to what date in the
+            # weekly view
+            self.week_days = []
+            self.current_day = datetime.datetime.today()
+            start = self.current_day.weekday()
+            end = 7 - start
+            for i in range(-start, end):
+                self.week_days.append(
+                    (self.current_day + datetime.timedelta(days=i)).day)
 
-        # Auto detect location
-        self.city = geocoder.ip("me").city
+            # Auto detect location
+            self.city = geocoder.ip("me").city
 
-        # OpenWeather API format
-        # https://openweathermap.org/current
-        self.weatherAPI = "https://api.openweathermap.org/data/2.5/weather?q" \
-                          "=" + \
-                          self.city + "&appid=" + API_KEY
+            # OpenWeather API format
+            # https://openweathermap.org/current
+            self.weatherAPI \
+                = "https://api.openweathermap.org/data/2.5/weather?q" \
+                  "=" + \
+                  self.city + "&appid=" + API_KEY
 
-        # Weather report
-        self.weather = requests.get(url=self.weatherAPI).json()
-        self.condition = self.weather["weather"][0]["main"]
-        # Weather icon
-        code = self.weather["weather"][0]["icon"]
-        self.weather_image = "./weather/" + code + "@2x.png"
-        # Weather temperature (-273.15 to convert from kelvin)
-        self.celsius = float(self.weather["main"]["temp"])
-        self.temperature = math.floor(self.celsius - 273.15)
+            # Weather report
+            self.weather = requests.get(url=self.weatherAPI).json()
+            self.condition = self.weather["weather"][0]["main"]
+            # Weather icon
+            code = self.weather["weather"][0]["icon"]
+            self.weather_image = "./weather/" + code + "@2x.png"
+            # Weather temperature (-273.15 to convert from kelvin)
+            self.celsius = float(self.weather["main"]["temp"])
+            self.temperature = math.floor(self.celsius - 273.15)
 
-        # Title (3)
-        # Font
-        self.title_label_font = Font(
-            family="SF Pro Rounded",
-            size=20,
-            weight="bold"
-        )
-        # Title name and colour - Widgets
-        self.title_label = tk.Label(self.root, text="Widgets",
-                                    font=self.title_label_font,
-                                    fg=self.data["text_colour"],
-                                    bg=self.data["bg_colour"])
-        self.title_label.place(x=30, y=35)
+            # Title (3)
+            # Font
+            self.title_label_font = Font(
+                family="SF Pro Rounded",
+                size=20,
+                weight="bold"
+            )
+            # Title name and colour - Widgets
+            self.title_label = tk.Label(self.root, text="Widgets",
+                                        font=self.title_label_font,
+                                        fg=self.data["text_colour"],
+                                        bg=self.data["bg_colour"])
+            self.title_label.place(x=30, y=35)
 
-        # Buttons (3)
-        # Button which returns back to the home page
-        self.back_button = Button(self.root, text="Back", bg='#ffffff',
-                                  fg='#000000', borderless=1,
-                                  command=self.home)
-        self.back_button.place(x=3, y=3)
+            # Buttons (3)
+            # Button which returns back to the home page
+            self.back_button = Button(self.root, text="Back", bg='#ffffff',
+                                      fg='#000000', borderless=1,
+                                      command=self.home)
+            self.back_button.place(x=3, y=3)
 
-        # Calendar
-        # Title name and colour - Calendar
-        self.cal_label = tk.Label(self.root, text="Calendar",
-                                  font=self.title_label_font,
-                                  fg=self.data["text_colour"],
-                                  bg=self.data["bg_colour"])
-        self.cal_label.place(x=30, y=80)
-        self.show_week()
-
-        # Weather
-        # Title name and colour - Weather
-        self.weather_label = tk.Label(self.root, text="Weather",
+            # Calendar
+            # Title name and colour - Calendar
+            self.cal_label = tk.Label(self.root, text="Calendar",
                                       font=self.title_label_font,
                                       fg=self.data["text_colour"],
                                       bg=self.data["bg_colour"])
-        self.weather_label.place(x=30, y=280)
-        self.show_weather()
+            self.cal_label.place(x=30, y=80)
+            self.show_week()
+
+            # Weather
+            # Title name and colour - Weather
+            self.weather_label = tk.Label(self.root, text="Weather",
+                                          font=self.title_label_font,
+                                          fg=self.data["text_colour"],
+                                          bg=self.data["bg_colour"])
+            self.weather_label.place(x=30, y=280)
+            self.show_weather()
+        else:
+            messagebox.showinfo("Warning",
+                                "Warning"
+                                "\n \nPlease check your internet connection")
 
     # Calendar - weekly view
     def show_week(self):
@@ -612,7 +637,7 @@ class ToDo:
                 font=("SF Pro Rounded", 15, "bold"))
             # Dates
             self.root.create_text(
-                (box_size + box_size * i) + 32, 200,
+                (box_size + box_size * i) + 32, 199,
                 text=str(self.week_days[i]),
                 font=("SF Pro Rounded", 15, "bold"))
             # Dates boxes
