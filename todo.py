@@ -7,6 +7,7 @@ import tkinter.messagebox as messagebox
 from tkinter import *
 from tkinter.font import Font
 from tkmacosx import Button, CircleButton
+from idlelib.tooltip import Hovertip
 
 # Audio
 from playsound import playsound
@@ -56,6 +57,15 @@ class ToDo:
         self.root_1.geometry('370x500+600+75')  # Window size
         self.root_1.resizable(False, False)  # Disable window resizing
 
+        # Menu bar
+        self.menubar = tk.Menu(self.root_1)
+        self.root_1.config(menu=self.menubar)
+
+        self.menu = tk.Menu(self.menubar)
+        self.menubar.add_cascade(label="Navigate", menu=self.menu)
+        self.menu.add_command(label="Widgets", command=self.widgets)
+        self.menu.add_command(label="Preferences", command=self.settings)
+
         # Dock icon
         dock_icon = tk.Image("photo", file="images/icons.icns")
         self.root_1.iconphoto(True, dock_icon)
@@ -95,6 +105,8 @@ class ToDo:
                                     textvariable=self.new_task_entry_var,
                                     width=11)
         self.new_task_entry.place(x=35, y=75)
+        # Adds a tooltip
+        self.tip = Hovertip(self.new_task_entry, "enter task")
         # Time entry
         self.new_task_time_var = tk.StringVar()
         # Places the current time into the input field
@@ -499,8 +511,10 @@ class ToDo:
 
     # Internet detection
     def internet_on(self):
+        # To check whether there is an internet connection, we'll try to
+        # connect to google.com
         try:
-            socket.create_connection(('Google.com', 80))
+            socket.create_connection(('google.com', 80))
             return True
         except OSError:
             return False
@@ -665,7 +679,7 @@ class ToDo:
             47, 329, text=self.city, font=("SF Pro Rounded", 15, "bold"),
             justify="left", anchor="nw")
         self.root.create_text(
-            47, 352, text=str(self.temperature) + "°",
+            48, 352, text=str(self.temperature) + "°",
             font=("SF Pro Rounded", 15, "bold"), anchor="nw")
         img = Image.open(self.weather_image)
         self.weather_image = ImageTk.PhotoImage(image=img)
