@@ -478,7 +478,7 @@ class ToDo:
                         i[3] = "0"
                         with open("data.json", "w") as file:
                             json.dump(self.data, file)
-                # needed to fix syntax issue with 'with'
+                # needed to fix syntax issue with 'try'
                 except:
                     pass
 
