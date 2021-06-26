@@ -48,6 +48,11 @@ API_KEY = "413ddc96f3900cda7e59f97f89395675"
 title = "To-do List"
 message = "Success; email has been sent"
 
+# Stopwatch
+running = False
+# "reset" of the stopwatch
+hours, minutes, seconds = 0, 0, 0
+
 
 # Housing of the program
 class ToDo:
@@ -171,6 +176,7 @@ class ToDo:
                                             bg='#ffffff', fg='#000000',
                                             borderless=1, width=35,
                                             command=self.settings)
+        self.tip = Hovertip(self.settings_button, "Preferences")
         self.settings_button.place(x=308, y=418)
         # Button which opens up the widgets page
         self.widgets_image = ImageTk.PhotoImage(
@@ -180,6 +186,7 @@ class ToDo:
                                            bg='#ffffff', fg='#000000',
                                            borderless=1, width=35,
                                            command=self.widgets)
+        self.tip = Hovertip(self.widgets_button, "Widgets")
         self.widgets_button.place(x=268, y=418)
 
         self.root_1.after(50, self.send_email())
@@ -246,6 +253,7 @@ class ToDo:
                 minute = i[1][-2] + i[1][-1]
                 minute = int(minute)
 
+                # Error handling
                 date_old = datetime.datetime(year, day, month, hour, minute)
 
                 if datetime.datetime.now() > date_old:
@@ -408,7 +416,7 @@ class ToDo:
     # Changes the email
     def change_func(self):
         playsound("audio/add.mp3")
-        # If the inputted email is valid
+        # If the inputted email is valid - error handling
         if validate_email(self.email_entry_var.get()):
             # If the amount of tasks in the list is 0 (denoted by len),
             # proceed to change the email, otherwise, present an error
@@ -457,6 +465,7 @@ class ToDo:
                         self.smtp_session.login("mailtemp025@gmail.com",
                                                 "Fluffy15010hi")
                         # Confirmation that email has been sent
+                        # Sends a MacOS banner
                         command = f'''
                                 osascript -e 'display notification "
                                 {message}" with title "{title}"'
@@ -512,7 +521,7 @@ class ToDo:
     # Internet detection
     def internet_on(self):
         # To check whether there is an internet connection, we'll try to
-        # connect to google.com
+        # connect to google.com - error handling
         try:
             socket.create_connection(('google.com', 80))
             return True
@@ -528,6 +537,28 @@ class ToDo:
                                   bg=self.data["bg_colour"],
                                   highlightthickness=0)
             self.root.grid(row=0, column=0)
+
+            # Additional widgets
+            # Stopwatch
+            self.timer_image = ImageTk.PhotoImage(
+                Image.open("images/stopwatch.png"))
+            self.timer_button = CircleButton(self.root,
+                                             image=self.timer_image,
+                                             bg='#ffffff', fg='#000000',
+                                             borderless=1, width=35,
+                                             command=self.stopwatch)
+            self.timer_button.place(x=265, y=35)
+            self.tip2 = Hovertip(self.timer_button, "Stopwatch")
+            # Random quote generator
+            self.quote_image = ImageTk.PhotoImage(
+                Image.open("images/quote.png"))
+            self.quote_button = CircleButton(self.root,
+                                             image=self.quote_image,
+                                             bg='#ffffff', fg='#000000',
+                                             borderless=1, width=35,
+                                             command=self.quotes)
+            self.quote_button.place(x=305, y=35)
+            self.tip3 = Hovertip(self.quote_button, "Quotes")
 
             # Days
             self.week = [
@@ -686,6 +717,191 @@ class ToDo:
         self.root.create_image(185, 383, image=self.weather_image)
         self.root.create_text(
             185, 420, text=self.condition, font=("SF Pro Rounded", 15, "bold"))
+
+    # Stopwatch page (3)
+    def stopwatch(self):
+
+        # To start the stopwatch
+        def play():
+            playsound("audio/add.mp3")
+            global running
+            if not running:
+                update()
+                running = True
+
+        # To pause the stopwatch
+        def pause():
+            playsound("audio/delete.mp3")
+            global running
+            if running:
+                # Stop the stopwatch from being updated
+                swatch_label.after_cancel(update_time)
+                running = False
+
+        # To reset the stopwatch
+        def reset():
+            global running
+            if running:
+                # Stops the stopwatch from being updated
+                swatch_label.after_cancel(update_time)
+                running = False
+            # Setting the stopwatch back to 00:00:00
+            global hours, minutes, seconds
+            hours, minutes, seconds = 0, 0, 0
+            swatch_label.config(text='00:00:00')
+
+        def update():
+            # Update the timer when it reaches its final possible amount
+            # e.g. after 60seconds, add 1 min
+            global hours, minutes, seconds
+            seconds += 1
+            if seconds == 60:
+                minutes += 1
+                seconds = 0
+            if minutes == 60:
+                hours += 1
+                minutes = 0
+            # Time formatting
+            hour_s = f'{hours}' if hours > 9 else f'0{hours}'
+            minute_s = f'{minutes}' if minutes > 9 else f'0{minutes}'
+            second_s = f'{seconds}' if seconds > 9 else f'0{seconds}'
+            # Update after 1000ms
+            swatch_label.config(text=hour_s + ':' + minute_s + ':' + second_s)
+            global update_time
+            update_time = swatch_label.after(1000, update)
+
+        # Reads the JSON
+        with open("data.json", "r") as file:
+            data = json.load(file)
+        # Creates the canvas
+        root_time = tk.Canvas(width=370, height=500,
+                              bg=data["bg_colour"], highlightthickness=0)
+        root_time.place(x=0, y=0)
+        # Rectangle aesthetic
+        root_time.create_rectangle(
+            80, 174, 288, 259, outline="#D7D7D7", width=4, fill="#F0F0F0")
+
+        # Time display
+        swatch_label = tk.Label(text='00:00:00',
+                                font=('SF Pro Rounded', 30, 'bold'),
+                                bg="#F0F0F0", fg="BLACK")
+        swatch_label.place(x=111, y=194)
+        # Playback controls
+        # Title
+        self.watch_label = tk.Label(root_time, text="Stopwatch",
+                                    font=self.title_label_font,
+                                    fg=self.data["text_colour"],
+                                    bg=self.data["bg_colour"])
+        self.watch_label.place(x=130, y=108)
+        # Play button
+        play_button_image = ImageTk.PhotoImage(Image.open("images/play.png"))
+        play_button = CircleButton(root_time, image=play_button_image,
+                                   bg='#ffffff', fg='#000000',
+                                   borderless=1, width=47,
+                                   command=play)
+        play_button.place(x=76, y=300)
+        # Pause button
+        pause_button_image = ImageTk.PhotoImage(Image.open("images/pause.png"))
+        pause_button = CircleButton(root_time, image=pause_button_image,
+                                    bg='#ffffff', fg='#000000',
+                                    borderless=1, width=47,
+                                    command=pause)
+        pause_button.place(x=126, y=300)
+        # Reset button
+        reset_button_image = ImageTk.PhotoImage(Image.open("images/reset.png"))
+        reset_button = CircleButton(root_time, image=reset_button_image,
+                                    bg='#ffffff', fg='#000000',
+                                    borderless=1, width=47,
+                                    command=reset)
+        reset_button.place(x=246, y=300)
+
+        # Combining 2 functions so that a button can run them at the same time
+        def combined():
+            self.widgets()
+            reset()
+
+        # Back button
+        self.back_button = Button(root_time, text="Back", bg='#ffffff',
+                                  fg='#000000', borderless=1,
+                                  command=combined)
+        self.back_button.place(x=3, y=3)
+        # Help button
+        self.help = Button(root_time, text="Help",
+                           bg='#ffffff', fg='#000000', borderless=1,
+                           command=self.helptext)
+        self.help.place(x=3, y=30)
+
+    # Help button text
+    def helptext(self):
+        messagebox.showinfo("Help",
+                            "Help \n \n 1. To start the counter, click the "
+                            "green button with the play icon. \n \n 2. To "
+                            "pause the counter, click the second red button "
+                            "with the pause icon. \n \n 3. To reset the "
+                            "counter, click the third red button with the "
+                            "circular icon.")
+
+    # Random Quote (4)
+    def quotes(self):
+        if self.internet_on():
+            # Creates a new frame for the preferences page
+            self.root_3 = tk.Canvas(self.root_1, width=370, height=500,
+                                    bg=self.data["bg_colour"],
+                                    highlightthickness=0)
+            self.root_3.place(x=0, y=0)
+
+            # Back button
+            self.back_button = Button(self.root_3, text="Back", bg='#ffffff',
+                                      fg='#000000', borderless=1,
+                                      command=self.widgets)
+            self.back_button.place(x=3, y=3)
+            # Title
+            self.quote_label = tk.Label(self.root_3,
+                                        text="Inspirational Quotes",
+                                        font=self.title_label_font,
+                                        fg=self.data["text_colour"],
+                                        bg=self.data["bg_colour"])
+            self.quote_label.place(x=93, y=108)
+
+            # Quote API
+            self.quoteAPI = "https://api.quotable.io/random?maxLength=35"
+            self.quote = requests.get(url=self.quoteAPI).json()["content"]
+            self.show_quote()
+        else:
+            # If there is no internet connection, issue a warning
+            messagebox.showinfo("Warning",
+                                "Warning"
+                                "\n \nPlease check your internet connection")
+
+    def show_quote(self):
+        with open("data.json", "r") as file:
+            data = json.load(file)
+        # Display rectangle and shows quote
+        self.root_3.create_rectangle(
+            30, 174, 338, 239, outline="#D7D7D7", width=4, fill="#F0F0F0")
+        self.root_3.create_text(
+            185, 205, text=self.quote, font=("SF Pro Rounded", 18, "bold"))
+
+        # Generate quote button
+        generate_button_image = ImageTk.PhotoImage(
+            Image.open("images/reset.png"))
+        generate_button = CircleButton(self.root_3,
+                                       image=generate_button_image,
+                                       bg='#ffffff', fg='#000000',
+                                       borderless=1, width=47,
+                                       command=self.quotes)
+        generate_button.place(x=159, y=300)
+        # Help button
+        self.help2 = Button(self.root_3, text="Help",
+                            bg='#ffffff', fg='#000000', borderless=1,
+                            command=self.helptext2)
+        self.help2.place(x=3, y=30)
+
+    # Help button text
+    def helptext2(self):
+        messagebox.showinfo("Help",
+                            "Help \n \n To generate a new quote, click the "
+                            "red button below.")
 
 
 main = ToDo()
