@@ -1,5 +1,41 @@
 # To-do List
 
+"""
+Information
+Name: Victor Qiu
+OS: Mac OS
+Github: https://github.com/vic025/todo
+
+Summary
+Functionality:
+ * To-do list
+   * 24 hour time
+   * US date format
+   * Requires an email to be entered
+ * Preferences
+   * Theme selector
+   * Help menu
+ * Calendar + Weather (general information)
+ * Stopwatch (study timer)
+ * Quote generator (motivational tool)
+
+91906 Requirements:
+ * creates a graphical user interface (GUI)
+ * reads from, or writes to, files or other persistent storage
+ * defines class(es) and creates objects
+ * uses third party or non-core API, library or framework
+
+Testing and Debugging:
+ * If input values are blank, an error will be displayed
+ * If inputs are impossible, an error will be displayed
+ * If an invalid email is entered, an error will be displayed
+
+ * When changing themes, selecting dark mode will result in the text to
+   become white
+ * When loading either the weather or quote API, if internet is not present
+   an error will be displayed
+"""
+
 # Imports
 # GUI
 import tkinter as tk
@@ -12,7 +48,7 @@ from idlelib.tooltip import Hovertip
 # Audio
 from playsound import playsound
 
-# Date and time
+# Date and time - note that datetime uses US date format
 import datetime
 
 # Images
@@ -50,7 +86,7 @@ message = "Success; email has been sent"
 
 # Stopwatch
 running = False
-# "reset" of the stopwatch
+# "reset" / the default settings for the stopwatch
 hours, minutes, seconds = 0, 0, 0
 
 
@@ -282,7 +318,7 @@ class ToDo:
         else:
             messagebox.showinfo("Invalid Input!",
                                 "An email has not been inputted. Please do so"
-                                "in the preferences menu")
+                                " in the preferences menu")
 
     # Settings page (2)
     def settings(self):
@@ -462,6 +498,9 @@ class ToDo:
                         self.smtp_session = smtplib.SMTP('smtp.gmail.com', 587)
                         self.smtp_session.starttls()
                         # Mailing address (email and password)
+                        # Security had to be lowered for automated emails, as
+                        # such, secure emails e.g. school emails will not be
+                        # able to receive emails from this application
                         self.smtp_session.login("mailtemp025@gmail.com",
                                                 "Fluffy15010hi")
                         # Confirmation that email has been sent
