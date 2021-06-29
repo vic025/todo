@@ -24,6 +24,7 @@ Functionality:
  * reads from, or writes to, files or other persistent storage
  * defines class(es) and creates objects
  * uses third party or non-core API, library or framework
+ * pep8 requirement fulfilled - http://pep8online.com
 
 Testing and Debugging:
  * If input values are blank, an error will be displayed
@@ -34,6 +35,15 @@ Testing and Debugging:
    become white
  * When loading either the weather or quote API, if internet is not present
    an error will be displayed
+
+Credits:
+ * Weather icons were retrieved from
+   https://icons8.com/icon/set/weather/officexs--static where permission has
+   been granted if credit is given
+ * Audio was retrieved and alterted from
+   https://www.zapsplat.com/sound-effect-categories/ where permission has
+   been granted if credit is given
+ * Everything else has been created by myself
 """
 
 # Imports
@@ -757,7 +767,7 @@ class ToDo:
         self.root.create_text(
             185, 420, text=self.condition, font=("SF Pro Rounded", 15, "bold"))
 
-    # Stopwatch page (3)
+    # Stopwatch page (4)
     def stopwatch(self):
 
         # To start the stopwatch
@@ -801,11 +811,11 @@ class ToDo:
                 hours += 1
                 minutes = 0
             # Time formatting
-            hour_s = f'{hours}' if hours > 9 else f'0{hours}'
-            minute_s = f'{minutes}' if minutes > 9 else f'0{minutes}'
-            second_s = f'{seconds}' if seconds > 9 else f'0{seconds}'
+            hour = f'{hours}' if hours > 9 else f'0{hours}'
+            minute = f'{minutes}' if minutes > 9 else f'0{minutes}'
+            second = f'{seconds}' if seconds > 9 else f'0{seconds}'
             # Update after 1000ms
-            swatch_label.config(text=hour_s + ':' + minute_s + ':' + second_s)
+            swatch_label.config(text=hour + ':' + minute + ':' + second)
             global update_time
             update_time = swatch_label.after(1000, update)
 
@@ -880,7 +890,7 @@ class ToDo:
                             "counter, click the third red button with the "
                             "circular icon.")
 
-    # Random Quote (4)
+    # Random Quote (5)
     def quotes(self):
         if self.internet_on():
             # Creates a new frame for the preferences page
