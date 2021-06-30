@@ -564,8 +564,8 @@ class ToDo:
                             "\n \n 2. This application uses 24 hour time for "
                             "inputs."
                             "\n \n 3. An internet connection is needed for "
-                            "email capabilities to function."
-                            "\n \n 4. MacOS is the only supported platform")
+                            "email functionality to work."
+                            "\n \n 4. MacOS is the only supported platform.")
 
     # Internet detection
     def internet_on(self):
@@ -596,7 +596,7 @@ class ToDo:
                                              bg='#ffffff', fg='#000000',
                                              borderless=1, width=35,
                                              command=self.stopwatch)
-            self.timer_button.place(x=265, y=35)
+            self.timer_button.place(x=261, y=35)
             self.tip2 = Hovertip(self.timer_button, "Stopwatch")
             # Random quote generator
             self.quote_image = ImageTk.PhotoImage(
@@ -910,7 +910,7 @@ class ToDo:
                                         font=self.title_label_font,
                                         fg=self.data["text_colour"],
                                         bg=self.data["bg_colour"])
-            self.quote_label.place(x=93, y=108)
+            self.quote_label.place(x=89, y=108)
 
             # Quote API
             self.quoteAPI = "https://api.quotable.io/random?maxLength=35"
@@ -925,7 +925,7 @@ class ToDo:
     def show_quote(self):
         with open("data.json", "r") as file:
             data = json.load(file)
-        # Display rectangle and shows quote
+        # Displays rectangle and shows quote
         self.root_3.create_rectangle(
             30, 174, 338, 239, outline="#D7D7D7", width=4, fill="#F0F0F0")
         self.root_3.create_text(
